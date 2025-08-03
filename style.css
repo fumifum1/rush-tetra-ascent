@@ -1,0 +1,423 @@
+:root {
+    --bg-color: #282c34;
+    --primary-text-color: #ffffff;
+    --primary-accent-color: #61dafb;
+    --container-bg-color: #1a1a1a;
+    --panel-bg-color: #3a3f47;
+    --panel-border-color: #4d525b;
+    --panel-header-color: #a0a8b4;
+    --dpad-button-bg: #666;
+    --dpad-button-active-bg: #888;
+    --center-button-bg: #d9534f;
+    --center-button-active-bg: #c9302c;
+    --a-button-bg: #5cb85c;
+    --a-button-active-bg: #4cae4c;
+    --b-button-bg: #f0ad4e;
+    --b-button-active-bg: #ec971f;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh; /* ビューポートの高さに合わせて中央寄せ */
+    margin: 0;
+    background-color: var(--bg-color);
+    color: var(--primary-text-color);
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    overflow: hidden; /* スクロールを禁止して、キー操作による画面揺れを防ぐ */
+}
+
+h1 {
+    color: var(--primary-accent-color);
+    margin-bottom: 15px;
+    font-size: 2em;
+    text-align: center;
+}
+
+/* ゲーム全体を囲むコンテナ */
+.game-container {
+    display: flex;
+    flex-direction: column; /* 縦方向に要素を並べる */
+    align-items: center; /* 子要素を中央に配置 */
+    width: 100%;
+    max-width: 500px; /* PCでの最大幅を制限 */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* 全体に影をつける */
+    border-radius: 10px;
+    background-color: var(--container-bg-color); /* 背景色を追加 */
+    padding: 15px;
+}
+
+/* ゲーム本体（HOLD、メインキャンバス、NEXT） */
+.game-area {
+    display: flex;
+    align-items: flex-start; /* 上端を揃える */
+    gap: 10px;
+    width: 100%;
+    justify-content: center; /* 中央寄せ */
+    margin-bottom: 20px; /* 操作ボタンとの間隔 */
+}
+
+canvas#tetrisCanvas {
+    border: 2px solid var(--primary-accent-color);
+    background-color: #000;
+    display: block;
+    width: 200px; /* 基準サイズを固定 */
+    height: 400px; /* 基準サイズを固定 */
+    flex-shrink: 0;
+}
+
+/* サイドバー（HOLD, NEXT） */
+.sidebar-left,
+.sidebar-right {
+    display: flex;
+    flex-direction: column; /* 縦並び */
+    gap: 10px;
+    width: 90px; /* サイドバーの幅を固定 */
+    flex-shrink: 0; /* 縮まないようにする */
+    height: 404px; /* tetrisCanvasの高さ(400px) + 上下ボーダー(2px*2)に合わせる */
+}
+
+.panel#holdPanel {
+    margin-top: auto; /* SCORE/LEVELとHOLD/NEXTの間にスペースを空ける */
+}
+
+.panel {
+    background-color: var(--panel-bg-color);
+    border: 1px solid var(--panel-border-color);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    color: var(--primary-text-color); /* パネル内の文字色 */
+}
+
+.panel.info-only {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.panel.info-only h2 {
+    font-size: 0.7em;
+    margin-bottom: 2px;
+}
+
+.panel.info-only p {
+    font-size: 1em;
+    font-weight: normal;
+}
+
+.panel h2 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    color: var(--panel-header-color);
+    font-size: 0.85em; /* 小さな表示用 */
+}
+
+.panel p {
+    font-size: 1.3em; /* スコア・レベルのフォントサイズ */
+    font-weight: bold;
+    color: var(--primary-text-color);
+    margin: 0;
+}
+
+.small-panel {
+    padding: 5px;
+}
+
+canvas#nextCanvas,
+canvas#holdCanvas {
+    background-color: var(--container-bg-color);
+    border: 1px solid var(--panel-border-color);
+    display: block;
+    margin: 0 auto;
+    width: 80px; /* NEXT/HOLDキャンバスの幅を固定 */
+    height: 80px; /* NEXT/HOLDキャンバスの高さを固定 */
+}
+
+.controller-container {
+    display: flex; /* D-Padとアクションボタンを横並びにする */
+    gap: 25px; /* D-Padとアクションボタン間のスペース */
+    background-color: #444;
+    padding: 25px;
+    border-radius: 45px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    align-items: center; /* 縦方向の中央揃え */
+}
+
+.dpad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 3px; /* ボタン間の隙間をさらに小さく */
+    width: 135px; /* D-Pad全体のサイズを小さく */
+    height: 135px; /* D-Pad全体のサイズを小さく */
+    position: relative;
+}
+
+.dpad-button {
+    /* width/heightはグリッドによって自動計算される */
+    background-color: var(--dpad-button-bg);
+    color: var(--primary-text-color);
+    font-size: 1.4em; /* フォントサイズも調整 */
+    font-weight: bold;
+    border: none;
+    border-radius: 10px; /* 角丸も調整 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.1s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.dpad-button:active,
+.dpad-button.active {
+    background-color: var(--dpad-button-active-bg);
+    transform: translateY(1px); /* 沈み込みも小さく */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* グリッド内でのボタン配置 (D-Pad) */
+.dpad-button.up {
+    grid-column: 2;
+    grid-row: 1;
+    border-radius: 10px 10px 3px 3px; /* 上だけ丸く */
+}
+
+.dpad-button.left {
+    grid-column: 1;
+    grid-row: 2;
+    border-radius: 10px 3px 3px 10px; /* 左だけ丸く */
+}
+
+.dpad-button.center {
+    grid-column: 2;
+    grid-row: 2;
+    background-color: var(--center-button-bg);
+    border-radius: 50%;
+    font-size: 1.2em;
+}
+
+.dpad-button.center:active,
+.dpad-button.center.active {
+    background-color: var(--center-button-active-bg);
+}
+
+.dpad-button.right {
+    grid-column: 3;
+    grid-row: 2;
+    border-radius: 3px 10px 10px 3px; /* 右だけ丸く */
+}
+
+.dpad-button.down {
+    grid-column: 2;
+    grid-row: 3;
+    border-radius: 3px 3px 10px 10px; /* 下だけ丸く */
+}
+
+/* --- アクションボタンのスタイル --- */
+.action-buttons-section {
+    display: flex; /* ボタンを横並びにする */
+    flex-direction: row; /* 横並びにするために explicit に指定 (デフォルトですが念のため) */
+    gap: 18px; /* ボタン間のスペース */
+    align-items: center; /* 縦方向の中央揃え */
+    margin-right: 10px; /* 全体的な右端の余白 */
+    /* BボタンとAボタンの表示順を入れ替える場合は、HTML側で記述順をA, Bにすればよい */
+    /* もしくは CSS で order プロパティを使うことも可能 */
+}
+
+.action-button {
+    width: 55px; /* アクションボタンのサイズ */
+    height: 55px;
+    border-radius: 50%; /* 完全な円形 */
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #fff;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.1s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.action-button:active,
+.action-button.active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.b-button {
+    background-color: var(--b-button-bg); /* オレンジ系の色 */
+}
+
+.b-button:active,
+.b-button.active {
+    background-color: var(--b-button-active-bg);
+}
+
+.a-button {
+    background-color: var(--a-button-bg); /* 緑系の色 */
+}
+
+.a-button:active,
+.a-button.active {
+    background-color: var(--a-button-active-bg);
+}
+
+/* ==========================================================================
+   スマートフォン向けレイアウト調整 (特に縦が短いデバイス)
+   ========================================================================== */
+@media (max-width: 500px), (max-height: 740px) {
+    body {
+        padding: 5px;
+        justify-content: flex-start; /* 上寄せにして、上部が見切れるのを防ぐ */
+    }
+
+    h1 {
+        font-size: 1.5em;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .game-container {
+        padding: 10px;
+        width: 100%; /* 画面幅いっぱいに広げる */
+    }
+
+    .game-area {
+        gap: 5px;
+        margin-bottom: 15px;
+    }
+
+    /* メインキャンバスを縮小 */
+    canvas#tetrisCanvas {
+        width: 150px;  /* 200px -> 150px */
+        height: 300px; /* 400px -> 300px */
+    }
+
+    /* サイドバーとパネルを縮小 */
+    .sidebar-right {
+        width: 70px; /* 90px -> 70px */
+        height: 304px; /* canvas(300px) + border(4px) に合わせる */
+    }
+
+    canvas#nextCanvas,
+    canvas#holdCanvas {
+        width: 60px;  /* 80px -> 60px */
+        height: 60px; /* 80px -> 60px */
+    }
+
+    .panel h2 {
+        font-size: 0.7em;
+    }
+    .panel p {
+        font-size: 1.1em;
+    }
+
+    /* コントローラーを縮小 */
+    .controller-container {
+        padding: 15px;
+        gap: 20px;
+        border-radius: 35px;
+    }
+
+    .dpad-grid {
+        width: 120px;
+        height: 120px;
+    }
+
+    .dpad-button {
+        width: 38px;
+        height: 38px;
+        font-size: 1.3em;
+        border-radius: 10px;
+    }
+    
+    /* D-Padの角丸を再調整 */
+    .dpad-button.up { border-radius: 10px 10px 3px 3px; }
+    .dpad-button.left { border-radius: 10px 3px 3px 10px; }
+    .dpad-button.right { border-radius: 3px 10px 10px 3px; }
+    .dpad-button.down { border-radius: 3px 3px 10px 10px; }
+
+
+    .action-buttons-section {
+        gap: 15px;
+    }
+
+    .action-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5em;
+    }
+}
+
+/* Game Over Overlay */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100; /* Make sure it's on top */
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.overlay-content {
+    background-color: var(--container-bg-color);
+    padding: 30px 40px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(97, 218, 251, 0.5);
+    border: 2px solid var(--primary-accent-color);
+}
+
+.overlay-content h2 {
+    color: var(--center-button-bg); /* Red color for game over */
+    font-size: 2.5em;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+#pauseScreen h2 {
+    color: var(--b-button-bg); /* Orange color for paused */
+}
+
+.overlay-content p {
+    font-size: 1.2em;
+    margin-bottom: 25px;
+}
+
+#retryButton {
+    background-color: var(--a-button-bg);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#retryButton:hover {
+    background-color: var(--a-button-active-bg);
+}

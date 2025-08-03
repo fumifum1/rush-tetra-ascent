@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Rush Tetra Ascent</title>
+</head>
+<body>
+    <h1>Rush Tetra Ascent</h1>
+    <div class="game-container">
+        <div class="game-area">
+            <canvas id="tetrisCanvas" width="200" height="400"></canvas>
+
+            <div class="sidebar-right">
+                <div class="panel info-only">
+                    <h2>SCORE</h2>
+                    <p id="score">0</p>
+                </div>
+                <div class="panel info-only">
+                    <h2>LEVEL</h2>
+                    <p id="level">1</p>
+                </div>
+                <div class="panel small-panel" id="holdPanel">
+                    <h2>HOLD</h2>
+                    <canvas id="holdCanvas" width="80" height="80"></canvas>
+                </div>
+                <div class="panel small-panel">
+                    <h2>NEXT</h2>
+                    <canvas id="nextCanvas" width="80" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="controller-container">
+        <div class="dpad-section">
+            <div class="dpad-grid">
+                <button class="dpad-button up" data-direction="up" aria-label="回転">▲</button>
+                <button class="dpad-button left" data-direction="left" aria-label="左に移動">◀</button>
+                <button class="dpad-button center" data-action="action" aria-label="回転">●</button>
+                <button class="dpad-button right" data-direction="right" aria-label="右に移動">▶</button>
+                <button class="dpad-button down" data-direction="down" aria-label="下に移動">▼</button>
+            </div>
+        </div>
+        <div class="action-buttons-section">
+            <button class="action-button b-button" data-action="b" aria-label="ホールド">B</button>
+            <button class="action-button a-button" data-action="a" aria-label="回転">A</button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="overlay hidden">
+        <div class="overlay-content">
+            <h2>GAME OVER</h2>
+            <p>Your Score: <span id="finalScore">0</span></p>
+            <button id="retryButton">Retry</button>
+        </div>
+    </div>
+
+    <!-- Pause Screen -->
+    <div id="pauseScreen" class="overlay hidden">
+        <div class="overlay-content">
+            <h2>PAUSED</h2>
+            <p>Press 'P' to resume</p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
