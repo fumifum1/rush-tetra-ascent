@@ -11,7 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameOverScreen = document.getElementById('gameOverScreen');
     const finalScoreElement = document.getElementById('finalScore');
     const retryButton = document.getElementById('retryButton');
-    const pauseScreen = document.getElementById('pauseScreen');
+    const startScreen = document.getElementById('startScreen');
+    const startButton = document.getElementById('startButton');
+    const hamburgerButton = document.getElementById('hamburgerButton');
+    const sideMenu = document.getElementById('sideMenu');
+    const optionsScreen = document.getElementById('optionsScreen');
+    const bgmToggle = document.getElementById('bgmToggle');
+    const sfxToggle = document.getElementById('sfxToggle');
+    const backButton = document.getElementById('backButton');
+    const rankingScreen = document.getElementById('rankingScreen');
+    const highScoreList = document.getElementById('highScoreList');
+    const rankingBackButton = document.getElementById('rankingBackButton');
+    const highScoreForm = document.getElementById('highScoreForm');
+    const playerNameInput = document.getElementById('playerNameInput');
 
     // --- Audio Manager ---
     const sfx = {
@@ -28,11 +40,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // BGMのプロパティを設定
     sfx.bgm.loop = true;
-    sfx.bgm.volume = 0.3; // 音量を30%に設定
+    sfx.bgm.volume = 0.2; // 音量を20%に設定
+
+    // --- Sound Settings ---
+    let soundSettings = {
+        bgm: true,
+        sfx: true,
+    };
 
 
     // Function to play sound without interrupting previous playback
     function playSound(sound) {
+        // Exit if SFX are muted
+        if (!soundSettings.sfx) {
+            return;
+        }
         // Allows the sound to be replayed quickly
         sound.currentTime = 0;
         // .catch() handles potential errors if the browser blocks autoplay
@@ -44,7 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const ROWS = 20; // ボードの高さ（行数）
     const BLOCK_SIZE = canvas.width / COLS; // 1ブロックのサイズを計算
 
+    const RANKING_KEY = 'rushTetraHighScores';
+    const MAX_SCORES = 10;
+
     const GAME_STATE = {
+        MENU: 'menu',
         PLAYING: 'playing',
         PAUSED: 'paused',
         GAME_OVER: 'gameOver'
@@ -285,8 +311,8 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function drawSidePiece(ctx, type) {
         const canvas = ctx.canvas;
-        ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // キャンバスをクリアして、CSSで設定した半透明の背景が見えるようにする
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (type) {
             const piece = TETROMINOES[type];
@@ -314,8 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function draw() {
         // Main board
-        context.fillStyle = '#000';
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        // キャンバスをクリアして、CSSで設定した半透明の背景が見えるようにする
+        context.clearRect(0, 0, canvas.width, canvas.height);
         board.forEach((row, y) => {
             row.forEach((value, x) => {
                 if (value !== 0) {
@@ -599,21 +625,39 @@ document.addEventListener('DOMContentLoaded', () => {
         stopGame();
         finalScoreElement.innerText = score;
         gameOverScreen.classList.remove('hidden');
+
+        if (isHighScore(score)) {
+            highScoreForm.classList.remove('hidden');
+            retryButton.classList.add('hidden');
+            playerNameInput.focus();
+        } else {
+            highScoreForm.classList.add('hidden');
+            retryButton.classList.remove('hidden');
+        }
     }
 
     /**
      * ゲームのポーズ/再開を切り替えます。
      */
     function togglePause() {
+        // Don't allow pausing if not in game or game is over
+        if (gameState !== GAME_STATE.PLAYING && gameState !== GAME_STATE.PAUSED) {
+            return;
+        }
+
         if (gameState === GAME_STATE.PLAYING) {
             gameState = GAME_STATE.PAUSED;
             sfx.bgm.pause();
             stopGame();
-            pauseScreen.classList.remove('hidden');
+            sideMenu.classList.add('active');
+            hamburgerButton.classList.add('active');
         } else if (gameState === GAME_STATE.PAUSED) {
             gameState = GAME_STATE.PLAYING;
-            sfx.bgm.play().catch(e => console.error("BGM play failed:", e));
-            pauseScreen.classList.add('hidden');
+            if (soundSettings.bgm) {
+                sfx.bgm.play().catch(e => console.error("BGM play failed:", e));
+            }
+            sideMenu.classList.remove('active');
+            hamburgerButton.classList.remove('active');
             lastTime = performance.now(); // 時間のジャンプを防ぐ
             gameLoop();
         }
@@ -624,7 +668,12 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function startGame() {
         stopGame(); // 既存のゲームループがあれば停止
+        startScreen.classList.add('hidden'); // スタート画面を隠す
         gameOverScreen.classList.add('hidden'); // ゲームオーバー画面を隠す
+        highScoreForm.classList.add('hidden'); // 名前入力フォームを隠す
+        retryButton.classList.add('hidden'); // リトライボタンを隠す
+        sideMenu.classList.remove('active'); // メニューが開いていたら閉じる
+        hamburgerButton.classList.remove('active');
         board = createEmptyBoard();
         score = 0;
         level = 1;
@@ -634,20 +683,113 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState = GAME_STATE.PLAYING;
         holdPieceType = null;
         comboCounter = 0;
+        lineClearEffects = [];
         gameEffects = [];
 
         // 最初のピースと次のピースを準備
         nextPieceType = PIECES[Math.floor(Math.random() * PIECES.length)];
         advancePiece();
 
-        // BGMの再生を開始
-        sfx.bgm.pause();
-        sfx.bgm.currentTime = 0;
-        sfx.bgm.play().catch(e => console.log("BGMの再生にはユーザー操作が必要です。"));
+        // Start BGM if enabled
+        if (soundSettings.bgm) {
+            sfx.bgm.pause();
+            sfx.bgm.currentTime = 0;
+            sfx.bgm.play().catch(e => console.log("BGMの再生にはユーザー操作が必要です。"));
+        }
 
         lastTime = 0;
         dropCounter = 0;
         gameLoop();
+    }
+
+    // --- Ranking Functions ---
+
+    /**
+     * Gets the high scores from localStorage.
+     * @returns {{name: string, score: number}[]} An array of high score objects.
+     */
+    function getHighScores() {
+        const scoresJSON = localStorage.getItem(RANKING_KEY);
+        return scoresJSON ? JSON.parse(scoresJSON) : [];
+    }
+
+    /**
+     * Checks if a score qualifies for the high score list.
+     * @param {number} score The score to check.
+     * @returns {boolean} True if it's a high score.
+     */
+    function isHighScore(score) {
+        if (score === 0) return false;
+        const highScores = getHighScores();
+        const lowestScore = highScores.length < MAX_SCORES ? 0 : highScores[MAX_SCORES - 1].score;
+        return score > lowestScore;
+    }
+
+    /**
+     * Adds a new score to the high scores list if it's high enough.
+     * @param {{name: string, score: number}} scoreEntry The new score entry to add.
+     */
+    function addHighScore(scoreEntry) {
+        if (scoreEntry.score === 0) return;
+        const highScores = getHighScores();
+        highScores.push(scoreEntry);
+        highScores.sort((a, b) => b.score - a.score); // Sort descending by score
+        const newHighScores = highScores.slice(0, MAX_SCORES); // Keep only top scores
+        localStorage.setItem(RANKING_KEY, JSON.stringify(newHighScores));
+    }
+
+    /**
+     * Displays the high scores on the ranking screen.
+     */
+    function displayHighScores() {
+        const highScores = getHighScores();
+        highScoreList.innerHTML = ''; // Clear previous list
+
+        if (highScores.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'NO SCORES YET';
+            highScoreList.appendChild(li);
+        } else {
+            highScores.forEach((score, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="rank">${index + 1}.</span> <span class="name">${score.name}</span> <span class="score">${score.score}</span>`;
+                highScoreList.appendChild(li);
+            });
+        }
+    }
+
+    /**
+     * Loads sound settings from localStorage and updates UI.
+     */
+    function loadSoundSettings() {
+        const savedSettings = localStorage.getItem('rushTetraSoundSettings');
+        if (savedSettings) {
+            soundSettings = JSON.parse(savedSettings);
+        }
+        // Update UI toggles to reflect the settings
+        bgmToggle.checked = soundSettings.bgm;
+        sfxToggle.checked = soundSettings.sfx;
+    }
+
+    /**
+     * Saves current sound settings to localStorage.
+     */
+    function saveSoundSettings() {
+        localStorage.setItem('rushTetraSoundSettings', JSON.stringify(soundSettings));
+    }
+
+    /**
+     * ゲームの初期化処理。ページロード時に一度だけ呼ばれる。
+     */
+    function init() {
+        gameState = GAME_STATE.MENU;
+        // 初期描画（背景など）
+        draw();
+        // 各オーバーレイの表示状態を正しく設定
+        startScreen.classList.remove('hidden');
+        gameOverScreen.classList.add('hidden');
+        rankingScreen.classList.add('hidden');
+        loadSoundSettings();
     }
 
     /**
@@ -676,6 +818,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // キーが押されたときの処理（ゲーム操作とUIフィードバック）
     window.addEventListener('keydown', (event) => {
+        // スタート画面が表示されている場合
+        if (gameState === GAME_STATE.MENU) {
+            if (event.key === 'Enter') {
+                startGame();
+            }
+            return;
+        }
+
         // ゲームオーバー画面が表示されている場合
         if (gameState === GAME_STATE.GAME_OVER) {
             if (event.key === 'Enter') {
@@ -767,6 +917,73 @@ document.addEventListener('DOMContentLoaded', () => {
         startGame();
     });
 
+    // スタートボタンのイベント
+    startButton.addEventListener('click', () => {
+        startGame();
+    });
+
+    // Hamburger menu button event
+    hamburgerButton.addEventListener('click', togglePause);
+
+    // Side menu item clicks
+    sideMenu.addEventListener('click', (e) => {
+        if (e.target.classList.contains('menu-item')) {
+            const action = e.target.dataset.action;
+            switch (action) {
+                case 'resume':
+                    togglePause(); // Resumes the game
+                    break;
+                case 'restart':
+                    startGame(); // Restarts the game
+                    break;
+                case 'options':
+                    sideMenu.classList.remove('active');
+                    optionsScreen.classList.remove('hidden');
+                    break;
+                case 'ranking':
+                    displayHighScores();
+                    sideMenu.classList.remove('active');
+                    rankingScreen.classList.remove('hidden');
+                    break;
+                case 'other':
+                    alert('このリンクはまだありません。');
+                    break;
+            }
+        }
+    });
+
+    // Options screen back button
+    backButton.addEventListener('click', () => {
+        optionsScreen.classList.add('hidden');
+        sideMenu.classList.add('active');
+    });
+
+    // BGM toggle switch
+    bgmToggle.addEventListener('change', (e) => {
+        soundSettings.bgm = e.target.checked;
+        if (soundSettings.bgm && (gameState === GAME_STATE.PLAYING || gameState === GAME_STATE.PAUSED)) {
+            sfx.bgm.play().catch(err => console.error("BGM play failed:", err));
+        } else {
+            sfx.bgm.pause();
+        }
+        saveSoundSettings();
+    });
+
+    // SFX toggle switch
+    sfxToggle.addEventListener('change', (e) => {
+        soundSettings.sfx = e.target.checked;
+        if (soundSettings.sfx) {
+            playSound(sfx.move); // Play a sound to confirm the change
+        }
+        saveSoundSettings();
+    });
+
+    // Ranking screen back button
+    rankingBackButton.addEventListener('click', () => {
+        rankingScreen.classList.add('hidden');
+        sideMenu.classList.add('active'); // Go back to the side menu
+    });
+
     // --- ゲーム開始 ---
-    startGame();
+    init();
 });

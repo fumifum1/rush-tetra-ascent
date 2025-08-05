@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <title>Rush Tetra Ascent</title>
 </head>
@@ -48,20 +51,82 @@
         </div>
     </div>
 
+    <!-- Hamburger Menu Button -->
+    <button id="hamburgerButton" class="hamburger-button" aria-label="Open Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Side Menu Panel -->
+    <div id="sideMenu" class="side-menu">
+        <nav class="menu-nav">
+            <a href="https://fumifum1.github.io/profile/index.html" class="menu-item" target="_blank" rel="noopener noreferrer">PROFILE</a>
+            <button class="menu-item" data-action="resume">RESUME</button>
+            <button class="menu-item" data-action="restart">RESTART</button>
+            <button class="menu-item" data-action="options">OPTIONS</button>
+            <button class="menu-item" data-action="ranking">RANKING</button>
+            <button class="menu-item" data-action="other">OTHER</button>
+        </nav>
+    </div>
+
     <!-- Game Over Screen -->
     <div id="gameOverScreen" class="overlay hidden">
         <div class="overlay-content">
             <h2>GAME OVER</h2>
             <p>Your Score: <span id="finalScore">0</span></p>
-            <button id="retryButton">Retry</button>
+            <form id="highScoreForm" class="hidden">
+                <label for="playerNameInput">ENTER NAME (3 CHARS):</label>
+                <input type="text" id="playerNameInput" maxlength="3" autocomplete="off" required>
+                <button type="submit">SUBMIT</button>
+            </form>
+            <button id="retryButton" class="hidden">Retry</button>
         </div>
     </div>
 
-    <!-- Pause Screen -->
-    <div id="pauseScreen" class="overlay hidden">
+    <!-- Options Screen -->
+    <div id="optionsScreen" class="overlay hidden">
         <div class="overlay-content">
-            <h2>PAUSED</h2>
-            <p>Press 'P' to resume</p>
+            <h2>OPTIONS</h2>
+            <div class="options-container">
+                <div class="option-item">
+                    <span>BGM</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="bgmToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="option-item">
+                    <span>SFX</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sfxToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <button id="backButton">BACK</button>
+        </div>
+    </div>
+
+    <!-- Ranking Screen -->
+    <div id="rankingScreen" class="overlay hidden">
+        <div class="overlay-content">
+            <h2>HIGH SCORES</h2>
+            <div class="ranking-container">
+                <ol id="highScoreList">
+                    <!-- Populated by JS -->
+                </ol>
+            </div>
+            <button id="rankingBackButton">BACK</button>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="startScreen" class="overlay">
+        <div class="overlay-content">
+            <h2 style="color: var(--primary-accent-color);">Rush Tetra Ascent</h2>
+            <p>Press Enter or click the button to start.</p>
+            <button id="startButton">Start Game</button>
         </div>
     </div>
     <script src="script.js"></script>
