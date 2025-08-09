@@ -74,7 +74,7 @@ button {
     background: 
         /* この行の最後の数値を 1 に近づけるほど、背景が黒くなります (例: 0.85) */
         linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)),
-        url('background.png');
+        url('jpg/background.png');
     background-size: cover;
     background-position: center;
     /* --- ここまで --- */
@@ -448,40 +448,10 @@ canvas#holdCanvas {
     margin-bottom: 25px;
 }
 
-#highScoreForm {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-#highScoreForm label {
-    font-size: 0.8em;
-}
-
-#playerNameInput {
-    background-color: #000;
-    border: 1px solid var(--primary-accent-color);
-    color: var(--primary-accent-color);
-    font-family: 'Press Start 2P', cursive;
-    text-align: center;
-    font-size: 1.2em;
-    width: 100px;
-    padding: 5px;
-    text-transform: uppercase;
-}
-
-#playerNameInput:focus {
-    outline: 2px solid var(--primary-accent-color);
-    box-shadow: 0 0 10px var(--primary-accent-color);
-}
-
 #retryButton,
 #startButton,
 #backButton,
-#rankingBackButton,
-#highScoreForm button {
+#rankingBackButton {
     background-color: var(--a-button-bg);
     color: white;
     border: none;
@@ -496,8 +466,7 @@ canvas#holdCanvas {
 #retryButton:hover,
 #startButton:hover,
 #backButton:hover,
-#rankingBackButton:hover,
-#highScoreForm button:hover {
+#rankingBackButton:hover {
     background-color: var(--a-button-active-bg);
 }
 

@@ -22,8 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const rankingScreen = document.getElementById('rankingScreen');
     const highScoreList = document.getElementById('highScoreList');
     const rankingBackButton = document.getElementById('rankingBackButton');
-    const highScoreForm = document.getElementById('highScoreForm');
-    const playerNameInput = document.getElementById('playerNameInput');
 
     // --- Audio Manager ---
     const sfx = {
@@ -625,14 +623,10 @@ document.addEventListener('DOMContentLoaded', () => {
         stopGame();
         finalScoreElement.innerText = score;
         gameOverScreen.classList.remove('hidden');
-
+ 
         if (isHighScore(score)) {
-            highScoreForm.classList.remove('hidden');
-            retryButton.classList.add('hidden');
-            playerNameInput.focus();
-        } else {
-            highScoreForm.classList.add('hidden');
-            retryButton.classList.remove('hidden');
+            // ハイスコアの場合、自動的にスコアを保存
+            addHighScore(score);
         }
     }
 
@@ -667,11 +661,9 @@ document.addEventListener('DOMContentLoaded', () => {
      * ゲームを開始します。
      */
     function startGame() {
-        stopGame(); // 既存のゲームループがあれば停止
+        stopGame(); // 既存のゲームループがあれば停止        
         startScreen.classList.add('hidden'); // スタート画面を隠す
         gameOverScreen.classList.add('hidden'); // ゲームオーバー画面を隠す
-        highScoreForm.classList.add('hidden'); // 名前入力フォームを隠す
-        retryButton.classList.add('hidden'); // リトライボタンを隠す
         sideMenu.classList.remove('active'); // メニューが開いていたら閉じる
         hamburgerButton.classList.remove('active');
         board = createEmptyBoard();
@@ -721,19 +713,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function isHighScore(score) {
         if (score === 0) return false;
         const highScores = getHighScores();
-        const lowestScore = highScores.length < MAX_SCORES ? 0 : highScores[MAX_SCORES - 1].score;
+        const lowestScore = highScores.length < MAX_SCORES ? 0 : highScores[highScores.length - 1];
         return score > lowestScore;
     }
 
     /**
      * Adds a new score to the high scores list if it's high enough.
-     * @param {{name: string, score: number}} scoreEntry The new score entry to add.
+     * @param {number} newScore The new score to add.
      */
-    function addHighScore(scoreEntry) {
-        if (scoreEntry.score === 0) return;
+    function addHighScore(newScore) {
+        if (newScore === 0) return;
         const highScores = getHighScores();
-        highScores.push(scoreEntry);
-        highScores.sort((a, b) => b.score - a.score); // Sort descending by score
+        highScores.push(newScore);
+        highScores.sort((a, b) => b - a); // Sort descending
         const newHighScores = highScores.slice(0, MAX_SCORES); // Keep only top scores
         localStorage.setItem(RANKING_KEY, JSON.stringify(newHighScores));
     }
@@ -752,7 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             highScores.forEach((score, index) => {
                 const li = document.createElement('li');
-                li.innerHTML = `<span class="rank">${index + 1}.</span> <span class="name">${score.name}</span> <span class="score">${score.score}</span>`;
+                li.innerHTML = `<span class="rank">${index + 1}.</span> <span class="score">${score}</span>`;
                 highScoreList.appendChild(li);
             });
         }
@@ -858,15 +850,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ゲーム操作
         switch (key) {
-            case 'ArrowLeft':
+            case 'arrowleft':
             case 'v':
                 handleGameAction(() => playerMove(-1));
                 break;
-            case 'ArrowRight':
+            case 'arrowright':
             case 'n':
                 handleGameAction(() => playerMove(1));
                 break;
-            case 'ArrowDown':
+            case 'arrowdown':
             case 'b':
                 handleGameAction(userPlayerDrop);
                 break;
@@ -875,6 +867,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleGameAction(playerRotate);
                 break;
             case ' ': // ハードダウン
+                // ブラウザのデフォルト動作（ボタンクリックなど）をキャンセルし、メニューが開くのを防ぐ
+                event.preventDefault();
                 handleGameAction(playerHardDrop);
                 break;
             case 'g': // ホールド
@@ -983,6 +977,8 @@ document.addEventListener('DOMContentLoaded', () => {
         rankingScreen.classList.add('hidden');
         sideMenu.classList.add('active'); // Go back to the side menu
     });
+
+    // ハイスコア登録フォームのイベントリスナーは不要になったため削除
 
     // --- ゲーム開始 ---
     init();
